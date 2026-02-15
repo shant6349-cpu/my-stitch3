@@ -1,23 +1,23 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stitch Online</title>
+    <title>Stitch Messenger</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background: #e7ebf0; 
-            height: 100vh; 
-            width: 100vw;
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden;
+        /* Обнуляем всё, чтобы заняло весь экран */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            width: 100% !important; 
+            height: 100% !important; 
+            overflow: hidden; 
+            position: fixed; /* Фиксируем, чтобы не дергалось */
+            font-family: -apple-system, sans-serif;
         }
 
         /* Экран входа */
@@ -27,21 +27,16 @@
             background: white; 
             z-index: 1000; 
             display: flex; 
-            flex-direction: column; 
             align-items: center; 
             justify-content: center; 
-            padding: 20px;
         }
-        .auth-box { width: 100%; max-width: 350px; text-align: center; }
-        .auth-box input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; outline: none; }
-        .auth-box button { width: 100%; padding: 15px; background: #3390ec; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
-        /* Окно чата на весь экран */
+        /* Главное окно на ВЕСЬ экран */
         #chat-window { 
             display: none; 
             flex-direction: column; 
-            width: 100%; 
-            height: 100vh; 
+            width: 100vw !important; 
+            height: 100vh !important; 
             background: #c7d2d9 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
             background-size: cover; 
         }
@@ -49,117 +44,84 @@
         header { 
             background: #3390ec; 
             color: white; 
-            padding: 12px 20px; 
+            padding: 15px; 
+            width: 100%;
             display: flex; 
             justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Сообщения стали ШИРОКИМИ */
         #messages { 
             flex: 1; 
-            padding: 15px; 
+            width: 100% !important; 
+            padding: 10px; 
             overflow-y: auto; 
             display: flex; 
             flex-direction: column; 
             gap: 10px; 
-            width: 100%;
         }
 
+        /* Сообщения теперь реально широкие */
         .msg { 
-            max-width: 85%; /* Теперь сообщения занимают больше места */
+            max-width: 88% !important; 
             padding: 10px 14px; 
-            border-radius: 15px; 
+            border-radius: 18px; 
             font-size: 16px; 
-            line-height: 1.4;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.15); 
             word-wrap: break-word; 
-            position: relative; 
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
-        .msg.sent { 
-            align-self: flex-end; 
-            background: #effdde; 
-            border-bottom-right-radius: 4px; 
-        }
+        .msg.sent { align-self: flex-end; background: #effdde; border-bottom-right-radius: 2px; }
+        .msg.received { align-self: flex-start; background: #ffffff; border-bottom-left-radius: 2px; }
 
-        .msg.received { 
-            align-self: flex-start; 
-            background: #ffffff; 
-            border-bottom-left-radius: 4px; 
-        }
+        .msg-info { font-size: 11px; color: #888; margin-bottom: 3px; display: block; }
 
-        .msg-info { 
-            font-size: 11px; 
-            color: #888; 
-            margin-bottom: 4px; 
-            display: block;
-        }
-
-        .msg-time {
-            font-size: 10px;
-            color: #999;
-            float: right;
-            margin-top: 5px;
-            margin-left: 10px;
-        }
-
-        /* Поле ввода во всю ширину */
+        /* Поле ввода внизу */
         .input-area { 
             background: #fff; 
-            padding: 10px 15px; 
+            padding: 10px; 
             display: flex; 
-            gap: 12px; 
-            align-items: center; 
+            width: 100%;
+            gap: 10px; 
             border-top: 1px solid #ddd;
         }
         .input-area input { 
             flex: 1; 
-            padding: 12px 18px; 
-            border: 1px solid #eee; 
+            padding: 12px; 
+            border: none; 
             background: #f1f1f1; 
             border-radius: 25px; 
-            font-size: 16px; 
-            outline: none;
-        }
-        .input-area i { 
-            color: #3390ec; 
-            font-size: 26px; 
-            cursor: pointer; 
+            outline: none; 
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
-        <div class="auth-box">
-            <h1 style="color: #3390ec; font-size: 32px; margin-bottom: 10px;">Stitch</h1>
-            <p style="color: #888; margin-bottom: 20px;">Онлайн мессенджер</p>
-            <input type="text" id="username" placeholder="Ваше имя...">
-            <button onclick="login()">Войти в чат</button>
+        <div style="width: 80%; text-align: center;">
+            <h1 style="color: #3390ec; margin-bottom: 20px;">Stitch</h1>
+            <input type="text" id="username" id="username" placeholder="Твоё имя..." 
+                   style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px;">
+            <button onclick="login()" 
+                    style="width: 100%; padding: 15px; background: #3390ec; color: white; border: none; border-radius: 10px; font-weight: bold;">Войти</button>
         </div>
     </div>
 
     <div id="chat-window">
         <header>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 35px; height: 35px; background: #fff; border-radius: 50%; color: #3390ec; display: flex; align-items: center; justify-content: center; font-weight: bold;">S</div>
-                <b id="user-display">Чат</b>
-            </div>
-            <i class="fa-solid fa-arrow-right-from-bracket" onclick="location.reload()"></i>
+            <b>Stitch Messenger</b>
+            <i class="fa-solid fa-sync" onclick="location.reload()"></i>
         </header>
-        
         <div id="messages"></div>
-
         <div class="input-area">
             <input type="text" id="msg-input" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') send()">
-            <i class="fa-solid fa-paper-plane" onclick="send()"></i>
+            <button onclick="send()" style="background: none; border: none; color: #3390ec; font-size: 24px;"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
 
 <script>
-    // ТВОИ ДАННЫЕ С ФОТО
     const firebaseConfig = {
         apiKey: "AIzaSyCfAgY00uE-PoAK0esojcsQMeTdiA3PJXE",
         authDomain: "mesenjershant.firebaseapp.com",
@@ -176,17 +138,15 @@
 
     function login() {
         myName = document.getElementById('username').value.trim();
-        if (myName.length < 2) return alert("Введите имя!");
+        if (myName.length < 2) return;
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('chat-window').style.display = 'flex';
-        document.getElementById('user-display').innerText = myName;
         loadMessages();
     }
 
     function send() {
         const input = document.getElementById('msg-input');
         if (input.value.trim() === "") return;
-
         db.ref('messages').push({
             user: myName,
             text: input.value,
@@ -204,11 +164,7 @@
                 Object.values(data).forEach(m => {
                     const div = document.createElement('div');
                     div.className = `msg ${m.user === myName ? 'sent' : 'received'}`;
-                    div.innerHTML = `
-                        <span class="msg-info"><b>${m.user}</b></span>
-                        ${m.text}
-                        <span class="msg-time">${m.time}</span>
-                    `;
+                    div.innerHTML = `<span class="msg-info"><b>${m.user}</b></span>${m.text}`;
                     area.appendChild(div);
                 });
                 area.scrollTop = area.scrollHeight;
