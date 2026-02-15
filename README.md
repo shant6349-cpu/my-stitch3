@@ -1,268 +1,237 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StitchGram Kawaii + Stories</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Stitch: Magic Edition</title>
     <style>
-        :root { 
-            --pink: #ffcce5; --purple: #e2d1f9; --blue: #d1e9ff;
-            --accent: #ff85a1; --text: #5a4a5a; --white: #ffffff;
-            --insta-grad: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        /* АНИМИРОВАННЫЙ ФОН */
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            /* Цвета перелива */
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a2a6c, #b21f1f);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
         }
 
-        body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; 
-            background: linear-gradient(135deg, var(--pink), var(--purple), var(--blue));
-            background-attachment: fixed; color: var(--text); padding-bottom: 100px;
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        header { 
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px);
-            padding: 15px 20px; border-bottom: 2px solid var(--pink); 
-            display: flex; justify-content: space-between; align-items: center; 
-            position: sticky; top: 0; z-index: 1000;
+        #pet-stage {
+            width: 400px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1); /* Полупрозрачность */
+            backdrop-filter: blur(20px); /* Эффект матового стекла */
+            border-radius: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+            color: white;
         }
-        header .logo { font-weight: 900; font-size: 24px; color: var(--accent); letter-spacing: 1px; }
 
-        /* --- STORIES BLOCK --- */
-        .stories-container {
-            display: flex; gap: 15px; padding: 15px; overflow-x: auto;
-            background: rgba(255, 255, 255, 0.3); margin-bottom: 10px;
-            scrollbar-width: none; /* Hide scrollbar */
+        /* ИНДИКАТОРЫ */
+        .stats-grid {
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px;
         }
-        .stories-container::-webkit-scrollbar { display: none; }
-        
-        .story-circle {
-            min-width: 65px; height: 65px; border-radius: 50%;
-            padding: 3px; background: var(--insta-grad);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.3s;
+        .stat-box { text-align: left; }
+        .stat-label { font-size: 10px; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 4px; display: block; }
+        .bar-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.3); border-radius: 5px; overflow: hidden; }
+        .fill { height: 100%; width: 100%; transition: width 0.5s ease; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+        /* ЛИЦО СТИЧА */
+        #stitch-face {
+            position: relative; 
+            width: 200px; 
+            height: 180px; 
+            margin: 50px auto 30px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .story-circle img {
-            width: 100%; height: 100%; border-radius: 50%;
-            object-fit: cover; border: 3px solid white;
+
+        .head {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(circle at 35% 30%, #5d8aff, #3a56d4 60%, #1e2a78 100%);
+            border-radius: 50% 50% 46% 46%; z-index: 5;
+            box-shadow: inset -5px -10px 20px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.3);
         }
-        .story-name { font-size: 10px; text-align: center; margin-top: 5px; font-weight: bold; color: var(--text); }
 
-        /* --- POSTS --- */
-        .view-content { max-width: 500px; margin: 0 auto; padding: 10px; }
-        .post { 
-            background: var(--white); border-radius: 30px; margin-bottom: 25px; 
-            overflow: hidden; box-shadow: 0 10px 25px rgba(255, 133, 161, 0.15);
-            border: 2px solid #fff; animation: bounceIn 0.6s ease;
+        .ear {
+            position: absolute; top: -20px; width: 60px; height: 130px;
+            background: #3a56d4; border-radius: 100% 20% 100% 20%; z-index: 1;
+            transition: transform 0.6s ease;
         }
-        @keyframes bounceIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
-        .post-header { padding: 12px 18px; display: flex; align-items: center; gap: 12px; font-weight: bold; }
-        .user-ava { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--pink); object-fit: cover; }
-        .post-img { width: 100%; display: block; max-height: 500px; object-fit: cover; }
-        .post-footer { padding: 15px 20px; }
-        .post-icons { display: flex; gap: 20px; font-size: 24px; margin-bottom: 10px; color: var(--accent); }
-        .fa-heart.active { color: #ff3040; animation: heartBeat 0.3s ease; }
-        @keyframes heartBeat { 50% { transform: scale(1.3); } }
-
-        /* --- NAV --- */
-        nav { 
-            position: fixed; bottom: 20px; left: 20px; right: 20px;
-            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
-            border-radius: 35px; display: flex; justify-content: space-around; 
-            padding: 12px 0; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border: 2px solid var(--pink);
+        .ear::after {
+            content: ''; position: absolute; top: 15%; left: 15%; width: 70%; height: 75%;
+            background: radial-gradient(ellipse, #ff9bb7 10%, #3a56d4 80%);
+            border-radius: inherit; opacity: 0.5;
         }
-        .nav-link { font-size: 24px; color: #d1b2d1; cursor: pointer; transition: 0.3s; }
-        .nav-link.active { color: var(--accent); transform: scale(1.2); }
+        .ear.left { left: -40px; transform: rotate(-35deg); }
+        .ear.right { right: -40px; transform: rotate(35deg) scaleX(-1); }
 
-        /* --- MODAL --- */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: white; padding: 25px; border-radius: 30px; width: 90%; max-width: 380px; border: 3px solid var(--pink); }
-        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--purple); border-radius: 15px; box-sizing: border-box; outline: none; }
-        .btn-action { background: var(--accent); color: white; border: none; padding: 14px; border-radius: 20px; width: 100%; font-weight: bold; cursor: pointer; }
+        .eye-patch {
+            position: absolute; top: 30px; width: 70px; height: 90px;
+            background: rgba(173, 216, 230, 0.2); border-radius: 50%; z-index: 6;
+        }
+        .eye-patch.left { left: 18px; transform: rotate(12deg); }
+        .eye-patch.right { right: 18px; transform: rotate(-12deg); }
 
-        /* FULL SCREEN STORY VIEW */
-        #story-overlay { display: none; position: fixed; inset: 0; background: black; z-index: 6000; flex-direction: column; align-items: center; justify-content: center; }
-        #story-overlay img { max-width: 100%; max-height: 80vh; border-radius: 15px; }
-        #story-progress { width: 90%; height: 3px; background: #333; position: absolute; top: 20px; border-radius: 2px; }
-        #story-bar { width: 0%; height: 100%; background: white; transition: 5s linear; }
+        .eye {
+            position: absolute; top: 18px; left: 12px; width: 46px; height: 58px;
+            background: #080808; border-radius: 50%; transition: 0.3s;
+        }
+        .eye::before {
+            content: ''; position: absolute; top: 8px; left: 8px; width: 14px; height: 20px;
+            background: white; border-radius: 50%; opacity: 0.9;
+        }
 
-        #auth-screen { position: fixed; inset: 0; background: linear-gradient(var(--pink), var(--purple)); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: white; padding: 40px; border-radius: 35px; text-align: center; width: 85%; max-width: 350px; border: 4px solid var(--accent); }
+        .nose {
+            position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+            width: 48px; height: 28px; background: #1b2661;
+            border-radius: 50% 50% 40% 40%; z-index: 7;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.2);
+        }
+
+        .mouth {
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
+            width: 50px; height: 8px; border-bottom: 3px solid #1b2661;
+            border-radius: 50%; z-index: 7; transition: 0.3s;
+        }
+
+        /* ЭФФЕКТЫ */
+        .bad-mood .ear.left { transform: rotate(-75deg); }
+        .bad-mood .ear.right { transform: rotate(75deg) scaleX(-1); }
+        .sleeping .eye { height: 4px; top: 40px; }
+        .sleeping .eye::before { display: none; }
+        .eating .mouth { height: 20px; background: #2a1010; border-radius: 20% 20% 50% 50%; }
+
+        /* КНОПКИ */
+        .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        button {
+            padding: 12px; border: none; border-radius: 15px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.15); color: white; font-weight: bold; 
+            transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+        }
+        button:hover { background: #3a56d4; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
-        <div class="auth-card">
-            <h1 style="color: var(--accent); margin-bottom: 5px;">StitchGram</h1>
-            <p style="margin-bottom: 20px; font-size: 14px;">Создай свою историю ✨</p>
-            <input type="text" id="reg-user" placeholder="Твое имя...">
-            <input type="file" id="reg-file" accept="image/*" onchange="previewRegAva(this)">
-            <img id="reg-ava-pre" style="width:70px; height:70px; border-radius:50%; display:none; margin: 10px auto; object-fit:cover; border:2px solid var(--pink);">
-            <button class="btn-action" onclick="finishReg()">Войти ✨</button>
+<div id="pet-stage">
+    <div class="stats-grid">
+        <div class="stat-box">
+            <span class="stat-label">🍖 ГОЛОД</span>
+            <div class="bar-bg"><div id="h-fill" class="fill" style="background: linear-gradient(90deg, #ff5e62, #ff9966);"></div></div>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">😊 СЧАСТЬЕ</span>
+            <div class="bar-bg"><div id="ha-fill" class="fill" style="background: linear-gradient(90deg, #a8e063, #56ab2f);"></div></div>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">⚡ ЭНЕРГИЯ</span>
+            <div class="bar-bg"><div id="e-fill" class="fill" style="background: linear-gradient(90deg, #00c6ff, #0072ff);"></div></div>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">🌈 НАСТРОЕНИЕ</span>
+            <div class="bar-bg"><div id="m-fill" class="fill" style="background: linear-gradient(90deg, #f9d423, #ff4e50);"></div></div>
         </div>
     </div>
 
-    <div id="app-container" style="display:none;">
-        <header>
-            <div class="logo">STITCHGRAM</div>
-            <div style="color: var(--accent); font-size: 20px;"><i class="fa-solid fa-paper-plane"></i></div>
-        </header>
-
-        <div class="stories-container" id="stories-list">
-            </div>
-
-        <div id="home-view" class="view-content active-view">
-            <div id="feed-items"></div>
-        </div>
-
-        <div id="shorts-view" style="display:none;"></div>
-
-        <div id="profile-view" class="view-content" style="display:none;">
-            <div style="text-align:center; padding: 20px;">
-                <img id="p-avatar-img" style="width:80px; height:80px; border-radius:50%; border:3px solid white; box-shadow: 0 5px 15px var(--pink);">
-                <h2 id="p-username-txt"></h2>
-                <button onclick="logout()" style="border:none; background:#eee; padding:5px 15px; border-radius:15px; font-size:12px;">Выйти</button>
-            </div>
-            <div id="p-grid-items" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;"></div>
-        </div>
-
-        <nav>
-            <i class="fa-solid fa-house nav-link active" onclick="switchTab('home', this)"></i>
-            <i class="fa-solid fa-clapperboard nav-link" onclick="switchTab('shorts', this)"></i>
-            <i class="fa-solid fa-plus-circle nav-link" onclick="openUploadModal()" style="font-size: 30px; color: var(--accent);"></i>
-            <i class="fa-solid fa-user nav-link" onclick="switchTab('profile', this)"></i>
-        </nav>
-    </div>
-
-    <div id="story-overlay" onclick="closeStory()">
-        <div id="story-progress"><div id="story-bar"></div></div>
-        <img id="story-img" src="">
-        <p id="story-author" style="color:white; margin-top:15px; font-weight:bold;"></p>
-    </div>
-
-    <div id="upload-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="text-align: center; color: var(--accent);">Поделиться моментом ✨</h3>
-            <select id="upload-type">
-                <option value="post">Обычный пост</option>
-                <option value="story">История (Stories)</option>
-                <option value="short">Shorts (Видео)</option>
-            </select>
-            <input type="file" id="upload-file" accept="image/*,video/*">
-            <textarea id="upload-desc" placeholder="Описание..."></textarea>
-            <button class="btn-action" id="upload-btn" onclick="processUpload()">Опубликовать!</button>
-            <button onclick="closeUploadModal()" style="border:none; background:none; width:100%; margin-top:10px; color:gray;">Отмена</button>
+    <div id="stitch-face">
+        <div class="ear left"></div>
+        <div class="ear right"></div>
+        <div class="head">
+            <div class="eye-patch left"><div class="eye"></div></div>
+            <div class="eye-patch right"><div class="eye"></div></div>
+            <div class="nose"></div>
+            <div id="mouth" class="mouth"></div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, updateDoc, doc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <h3 id="status" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Алоха! ✨</h3>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAHxAc0XUrq4N5nuH0UnD66PAnUXRU_DJQ",
-            authDomain: "myprogram-1b6b0.firebaseapp.com",
-            projectId: "myprogram-1b6b0",
-            appId: "1:678957156444:web:6ac76957ea7e0ba2283e99"
-        };
+    <div class="btns">
+        <button onclick="update('feed')">🥪 КОРМИТЬ</button>
+        <button onclick="update('play')">🏄‍♂️ ИГРАТЬ</button>
+        <button onclick="update('hug')">🫂 ОБНЯТЬ</button>
+        <button onclick="update('sleep')">💤 СПАТЬ</button>
+    </div>
+</div>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+<script>
+    let stats = { hunger: 80, happy: 80, energy: 80, mood: 80 };
+    let isSleeping = false;
 
-        let me = JSON.parse(localStorage.getItem('sg_me'));
-        let tempAva = "";
+    function update(action) {
+        const face = document.getElementById('stitch-face');
+        const msg = document.getElementById('status');
 
-        window.previewRegAva = (i) => {
-            const r = new FileReader();
-            r.onload = e => { tempAva = e.target.result; document.getElementById('reg-ava-pre').src = e.target.result; document.getElementById('reg-ava-pre').style.display='block'; };
-            r.readAsDataURL(i.files[0]);
-        };
+        if (isSleeping && action !== 'sleep') return;
 
-        window.finishReg = () => {
-            const name = document.getElementById('reg-user').value;
-            if(!name) return alert("Введите имя");
-            me = { name, ava: tempAva || 'https://via.placeholder.com/150' };
-            localStorage.setItem('sg_me', JSON.stringify(me));
-            location.reload();
-        };
-
-        window.switchTab = (tab, el) => {
-            document.querySelectorAll('.view-content, #shorts-view').forEach(v => v.style.display = 'none');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById(tab + '-view').style.display = 'block';
-            el.classList.add('active');
-            if(tab === 'profile') renderProfile();
-        };
-
-        window.openUploadModal = () => document.getElementById('upload-modal').style.display = 'flex';
-        window.closeUploadModal = () => document.getElementById('upload-modal').style.display = 'none';
-
-        window.processUpload = async () => {
-            const type = document.getElementById('upload-type').value;
-            const file = document.getElementById('upload-file').files[0];
-            const desc = document.getElementById('upload-desc').value;
-            if(!file) return alert("Файл!");
-
-            const r = new FileReader();
-            r.onload = async e => {
-                await addDoc(collection(db, type === 'post' ? "posts" : (type === 'story' ? "stories" : "shorts")), {
-                    author: me.name, ava: me.ava, content: e.target.result, text: desc,
-                    likedUsers: [], comments: [], time: Date.now()
-                });
-                closeUploadModal();
-            };
-            r.readAsDataURL(file);
-        };
-
-        // STORY LOGIC
-        window.viewStory = (img, author) => {
-            document.getElementById('story-overlay').style.display = 'flex';
-            document.getElementById('story-img').src = img;
-            document.getElementById('story-author').innerText = "@" + author;
-            document.getElementById('story-bar').style.width = '100%';
-            setTimeout(closeStory, 5000);
-        };
-        window.closeStory = () => {
-            document.getElementById('story-overlay').style.display = 'none';
-            document.getElementById('story-bar').style.width = '0%';
-        };
-
-        if(me) {
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('app-container').style.display = 'block';
-
-            // Живые Stories
-            onSnapshot(query(collection(db, "stories"), orderBy("time", "desc")), (s) => {
-                const list = document.getElementById('stories-list');
-                list.innerHTML = `<div style="text-align:center;"><div class="story-circle" style="background:#eee" onclick="openUploadModal()"><img src="${me.ava}"></div><div class="story-name">Ваша</div></div>`;
-                list.innerHTML += s.docs.map(d => {
-                    const st = d.data();
-                    return `<div><div class="story-circle" onclick="viewStory('${st.content}', '${st.author}')"><img src="${st.ava}"></div><div class="story-name">${st.author}</div></div>`;
-                }).join('');
-            });
-
-            // Посты (Лента)
-            onSnapshot(query(collection(db, "posts"), orderBy("time", "desc")), (s) => {
-                document.getElementById('feed-items').innerHTML = s.docs.map(d => {
-                    const p = d.data();
-                    const isLiked = p.likedUsers?.includes(me.name);
-                    return `
-                    <div class="post">
-                        <div class="post-header"><img src="${p.ava}" class="user-ava"> ${p.author}</div>
-                        <img src="${p.content}" class="post-img" ondblclick="toggleLike('${d.id}', ${JSON.stringify(p.likedUsers || [])})">
-                        <div class="post-footer">
-                            <div class="post-icons"><i class="fa-solid fa-heart ${isLiked ? 'active' : ''}"></i><i class="fa-regular fa-comment"></i></div>
-                            <strong>${p.author}</strong> ${p.text}
-                        </div>
-                    </div>`;
-                }).join('');
-            });
+        switch(action) {
+            case 'feed':
+                stats.hunger = Math.min(100, stats.hunger + 25);
+                stats.mood = Math.min(100, stats.mood + 5);
+                face.classList.add('eating');
+                setTimeout(() => face.classList.remove('eating'), 1000);
+                msg.innerText = "Стич ест сэндвич! 🥪";
+                break;
+            case 'play':
+                if (stats.energy < 20) return msg.innerText = "Стич устал... 💤";
+                stats.happy = Math.min(100, stats.happy + 20);
+                stats.mood = Math.min(100, stats.mood + 15);
+                stats.energy -= 25;
+                msg.innerText = "Серфинг! 🏄‍♂️";
+                break;
+            case 'hug':
+                stats.happy = Math.min(100, stats.happy + 10);
+                stats.mood = Math.min(100, stats.mood + 30);
+                msg.innerText = "Охана! 🫂";
+                break;
+            case 'sleep':
+                isSleeping = !isSleeping;
+                face.classList.toggle('sleeping');
+                msg.innerText = isSleeping ? "Стич видит сны... 💤" : "Стич проснулся! ✨";
+                break;
         }
+        refreshUI();
+    }
 
-        window.renderProfile = () => {
-            document.getElementById('p-avatar-img').src = me.ava;
-            document.getElementById('p-username-txt').innerText = me.name;
-        };
-        window.logout = () => { localStorage.clear(); location.reload(); };
-    </script>
+    function refreshUI() {
+        document.getElementById('h-fill').style.width = stats.hunger + '%';
+        document.getElementById('ha-fill').style.width = stats.happy + '%';
+        document.getElementById('e-fill').style.width = stats.energy + '%';
+        document.getElementById('m-fill').style.width = stats.mood + '%';
+
+        const face = document.getElementById('stitch-face');
+        if (stats.mood < 40) face.classList.add('bad-mood');
+        else face.classList.remove('bad-mood');
+    }
+
+    setInterval(() => {
+        if (!isSleeping) {
+            stats.hunger = Math.max(0, stats.hunger - 2);
+            stats.happy = Math.max(0, stats.happy - 2);
+            stats.energy = Math.max(0, stats.energy - 1);
+            stats.mood = Math.max(0, stats.mood - 1.5);
+        } else {
+            stats.energy = Math.min(100, stats.energy + 5);
+            if (stats.energy >= 100) update('sleep');
+        }
+        refreshUI();
+    }, 3000);
+
+    refreshUI();
+</script>
+
 </body>
 </html>
