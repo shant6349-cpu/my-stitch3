@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Stitch Premium</title>
+    <title>Stitch Connect Premium</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -16,12 +16,13 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             background: var(--bg-gradient);
             height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
         /* Экран входа */
@@ -56,7 +57,7 @@
             outline: none;
         }
 
-        button {
+        .login-btn {
             width: 100%;
             padding: 15px;
             background: var(--primary);
@@ -66,10 +67,7 @@
             font-weight: bold;
             font-size: 16px;
             cursor: pointer;
-            transition: 0.3s;
         }
-
-        button:active { transform: scale(0.98); }
 
         /* Окно чата */
         #chat-window {
@@ -77,7 +75,7 @@
             flex-direction: column;
             width: 100%;
             max-width: 600px;
-            height: 95dvh;
+            height: 98dvh;
             background: var(--glass);
             border-radius: 20px;
             overflow: hidden;
@@ -95,54 +93,63 @@
             align-items: center;
         }
 
+        .header-btns { display: flex; gap: 15px; font-size: 18px; }
+
         #messages {
             flex: 1;
-            padding: 20px;
+            padding: 15px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            background: rgba(255,255,255,0.3);
+            gap: 12px;
+            background: rgba(255,255,255,0.2);
         }
 
         .msg {
             max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 15px;
+            padding: 10px 14px;
+            border-radius: 15px;
+            font-size: 16px;
             position: relative;
             animation: fadeIn 0.3s ease;
-            line-height: 1.4;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .msg.sent { align-self: flex-end; background: #d1eaff; color: #111; border-bottom-right-radius: 4px; }
-        .msg.received { align-self: flex-start; background: #fff; color: #111; border-bottom-left-radius: 4px; }
+        .msg.sent { align-self: flex-end; background: #d1eaff; border-bottom-right-radius: 2px; }
+        .msg.received { align-self: flex-start; background: #fff; border-bottom-left-radius: 2px; }
 
-        .msg-user { font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block; color: var(--primary); }
-        .msg-time { font-size: 10px; opacity: 0.6; display: block; text-align: right; margin-top: 4px; }
+        .msg-user { font-size: 11px; font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; color: var(--primary); }
+        .msg-time { font-size: 10px; opacity: 0.5; margin-top: 4px; text-align: right; }
+
+        .edit-btn { margin-left: 8px; cursor: pointer; color: #666; font-size: 12px; }
+        .edit-btn:hover { color: var(--primary); }
 
         /* Область ввода */
         .input-area {
-            padding: 15px;
+            padding: 12px 15px;
             background: #fff;
             display: flex;
             gap: 10px;
             align-items: center;
             border-top: 1px solid rgba(0,0,0,0.05);
+            padding-bottom: env(safe-area-inset-bottom, 12px);
         }
 
-        #msg-input { margin: 0; background: #f0f2f5; border: none; }
+        #msg-input { margin: 0; background: #f0f2f5; border: none; border-radius: 25px; }
 
         .send-btn {
             width: 45px;
             height: 45px;
-            padding: 0;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -150,29 +157,26 @@
 
     <div id="auth-screen">
         <div class="login-card">
-            <i class="fa-solid fa-comments" style="font-size: 50px; color: var(--primary); margin-bottom: 10px;"></i>
-            <h2 style="color: #333;">Stitch Connect</h2>
-            <input type="text" id="username" placeholder="Придумай имя...">
-            <button onclick="login()">Войти в чат</button>
+            <h2 style="color: #333; margin-bottom: 10px;">Stitch Connect</h2>
+            <p style="color: gray; font-size: 14px;">Введите ник, чтобы войти</p>
+            <input type="text" id="username" placeholder="Ваш ник...">
+            <button class="login-btn" onclick="login()">Войти</button>
         </div>
     </div>
 
     <div id="chat-window">
         <header>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div id="avatar" style="width: 35px; height: 35px; background: #fff; border-radius: 50%; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold;">?</div>
-                <b id="user-display">Чат</b>
-            </div>
-            <div style="display: flex; gap: 15px; font-size: 18px;">
-                <i class="fa-solid fa-trash" onclick="deleteChat()" style="cursor: pointer;"></i>
-                <i class="fa-solid fa-right-from-bracket" onclick="location.reload()" style="cursor: pointer;"></i>
+            <b id="user-display">Чат</b>
+            <div class="header-btns">
+                <i class="fa-solid fa-trash" onclick="deleteChat()" style="cursor: pointer;" title="Очистить всё"></i>
+                <i class="fa-solid fa-power-off" onclick="location.reload()" style="cursor: pointer;"></i>
             </div>
         </header>
 
         <div id="messages"></div>
 
         <div class="input-area">
-            <input type="text" id="msg-input" placeholder="Написать сообщение..." onkeypress="if(event.key==='Enter') send()">
+            <input type="text" id="msg-input" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') send()">
             <button class="send-btn" onclick="send()">
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
@@ -193,30 +197,46 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let myName = "";
+    let editId = null; 
 
     function login() {
         myName = document.getElementById('username').value.trim();
-        if (myName.length < 2) return;
+        if (myName.length < 2) return alert("Ник слишком короткий");
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('chat-window').style.display = 'flex';
-        document.getElementById('user-display').innerText = myName;
-        document.getElementById('avatar').innerText = myName[0].toUpperCase();
+        document.getElementById('user-display').innerText = "Я: " + myName;
         loadMessages();
     }
 
     function send() {
         const input = document.getElementById('msg-input');
-        if (input.value.trim() === "") return;
-        db.ref('messages').push({
-            user: myName,
-            text: input.value,
-            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        });
+        const text = input.value.trim();
+        if (text === "") return;
+
+        if (editId) {
+            db.ref('messages/' + editId).update({
+                text: text + " (изм.)"
+            });
+            editId = null;
+        } else {
+            db.ref('messages').push({
+                user: myName,
+                text: text,
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            });
+        }
         input.value = "";
     }
 
+    window.startEdit = function(id, text) {
+        const input = document.getElementById('msg-input');
+        input.value = text.replace(" (изм.)", "");
+        input.focus();
+        editId = id;
+    }
+
     function deleteChat() {
-        if(confirm("Очистить историю для всех?")) db.ref('messages').remove();
+        if(confirm("Удалить все сообщения?")) db.ref('messages').remove();
     }
 
     function loadMessages() {
@@ -225,14 +245,20 @@
             area.innerHTML = '';
             const data = snapshot.val();
             if (data) {
-                Object.values(data).forEach(m => {
+                Object.entries(data).forEach(([id, m]) => {
                     const isMe = m.user === myName;
                     const div = document.createElement('div');
                     div.className = `msg ${isMe ? 'sent' : 'received'}`;
+                    
+                    const editIcon = isMe ? `<i class="fa-solid fa-pen edit-btn" onclick="startEdit('${id}', '${m.text}')"></i>` : '';
+                    
                     div.innerHTML = `
-                        <span class="msg-user">${isMe ? 'Вы' : m.user}</span>
-                        ${m.text}
-                        <span class="msg-time">${m.time}</span>
+                        <span class="msg-user">
+                            ${isMe ? 'Вы' : m.user} 
+                            ${editIcon}
+                        </span>
+                        <div class="msg-text">${m.text}</div>
+                        <div class="msg-time">${m.time}</div>
                     `;
                     area.appendChild(div);
                 });
