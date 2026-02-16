@@ -17,6 +17,8 @@
         button { width: 100%; padding: 12px; background: #3390ec; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         header { background: #3390ec; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .header-btns { display: flex; gap: 20px; align-items: center; }
+        
         #chat-window { flex: 1; display: none; flex-direction: column; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: cover; }
         #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         
@@ -26,7 +28,7 @@
         .msg-info { font-size: 10px; color: #888; margin-bottom: 2px; }
 
         .input-area { background: #fff; padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #ddd; }
-        .input-area input { flex: 1; margin: 0; border: none; background: #f1f1f1; border-radius: 20px; padding-left: 15px; }
+        .input-area input { flex: 1; margin: 0; border: none; background: #f1f1f1; border-radius: 20px; padding-left: 15px; font-size: 16px; outline: none; }
     </style>
 </head>
 <body>
@@ -43,7 +45,10 @@
     <div id="chat-window">
         <header>
             <b id="user-display">Чат</b>
-            <i class="fa-solid fa-power-off" onclick="location.reload()" style="cursor: pointer;"></i>
+            <div class="header-btns">
+                <i class="fa-solid fa-trash" onclick="deleteChat()" style="cursor: pointer;" title="Очистить весь чат"></i>
+                <i class="fa-solid fa-power-off" onclick="location.reload()" style="cursor: pointer;" title="Выйти"></i>
+            </div>
         </header>
         <div id="messages"></div>
         <div class="input-area">
@@ -53,7 +58,6 @@
     </div>
 
 <script>
-    // ТВОИ ДАННЫЕ С ФОТО:
     const firebaseConfig = {
         apiKey: "AIzaSyCfAgY00uE-PoAK0esojcsQMeTdiA3PJXE",
         authDomain: "mesenjershant.firebaseapp.com",
@@ -64,12 +68,10 @@
         appId: "1:509135555574:web:6845e17523e44bae2215d7"
     };
 
-    // Соединяем приложение с базой
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let myName = "";
 
-    // Функция входа
     function login() {
         myName = document.getElementById('username').value.trim();
         if (myName.length < 2) return alert("Придумай ник подлиннее!");
@@ -79,7 +81,6 @@
         loadMessages();
     }
 
-    // Отправка сообщения в облако
     function send() {
         const input = document.getElementById('msg-input');
         if (input.value.trim() === "") return;
@@ -92,7 +93,13 @@
         input.value = "";
     }
 
-    // Загрузка сообщений в реальном времени
+    // НОВАЯ ФУНКЦИЯ: Удаление всех сообщений из базы
+    function deleteChat() {
+        if (confirm("Ты уверен, что хочешь удалить ВСЕ сообщения в этом чате? Это нельзя отменить.")) {
+            db.ref('messages').remove();
+        }
+    }
+
     function loadMessages() {
         db.ref('messages').on('value', (snapshot) => {
             const area = document.getElementById('messages');
@@ -101,12 +108,11 @@
             if (data) {
                 Object.values(data).forEach(m => {
                     const div = document.createElement('div');
-                    // Если сообщение моё - оно справа, если чужое - слева
                     div.className = `msg ${m.user === myName ? 'sent' : 'received'}`;
                     div.innerHTML = `<div class="msg-info"><b>${m.user}</b> • ${m.time}</div>${m.text}`;
                     area.appendChild(div);
                 });
-                area.scrollTop = area.scrollHeight; // Всегда в конец чата
+                area.scrollTop = area.scrollHeight;
             }
         });
     }
