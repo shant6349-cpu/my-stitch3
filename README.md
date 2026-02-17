@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Stitch-Gram Circle Fix</title>
+    <title>Stitch-Gram Voice Update</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -37,8 +37,8 @@
         .msg { max-width: 80%; padding: 8px 12px; border-radius: 15px; font-size: 15px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
         .msg.sent { align-self: flex-end; background: #effdde; }
         
-        /* КРУЖОЧЕК В ЧАТЕ */
         .circle-v { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; border: 2px solid var(--tg-blue); background: black; display: block; }
+        audio { max-width: 100%; height: 35px; margin-top: 5px; }
 
         /* Bottom bar */
         .bottom-bar { background: white; padding: 8px 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; }
@@ -56,8 +56,6 @@
     </style>
 </head>
 <body>
-
-    <audio id="notif-sound" src="https://www.soundjay.com/buttons/sounds/button-21.mp3"></audio>
 
     <div id="auth-screen" class="screen active">
         <div class="auth-card">
@@ -94,6 +92,7 @@
             <i class="fa-regular fa-face-smile icon-btn" onclick="toggleEmoji()"></i>
             <i class="fa-solid fa-circle-play icon-btn" style="color:var(--tg-blue)" onclick="startCircle()"></i>
             <input type="text" id="msg-input" placeholder="Сообщение..." oninput="isTyping()" onkeypress="if(event.key==='Enter') send()">
+            <i id="voice-btn" class="fa-solid fa-microphone icon-btn" onclick="toggleVoice()"></i>
             <i class="fa-solid fa-paper-plane icon-btn" onclick="send()" style="color:var(--tg-blue)"></i>
         </div>
     </div>
@@ -120,6 +119,7 @@
     let myName = "", chatPartner = "", chatID = "", typeTimer;
     let friends = JSON.parse(localStorage.getItem('myFriends') || '[]');
     let mediaRecorder, stream, chunks = [];
+    let voiceRecorder, voiceChunks = [], isRecordingVoice = false;
 
     async function login() {
         myName = document.getElementById('username').value.trim();
@@ -132,6 +132,7 @@
         initEmoji();
     }
 
+    /* ПОИСК И ДРУЗЬЯ (БЕЗ ИЗМЕНЕНИЙ) */
     function searchUsers() {
         const q = document.getElementById('search-in').value.trim();
         const res = document.getElementById('search-results');
@@ -161,15 +162,6 @@
         renderFriends();
     }
 
-    function removeFriend(u, e) {
-        e.stopPropagation();
-        if(confirm('Удалить из друзей?')) {
-            friends = friends.filter(f => f !== u);
-            localStorage.setItem('myFriends', JSON.stringify(friends));
-            renderFriends();
-        }
-    }
-
     function renderFriends() {
         const list = document.getElementById('friends-list');
         list.innerHTML = '';
@@ -183,6 +175,15 @@
         });
     }
 
+    function removeFriend(u, e) {
+        e.stopPropagation();
+        if(confirm('Удалить из друзей?')) {
+            friends = friends.filter(f => f !== u);
+            localStorage.setItem('myFriends', JSON.stringify(friends));
+            renderFriends();
+        }
+    }
+
     function openChat(p) {
         chatPartner = p;
         chatID = [myName, chatPartner].sort().join("_");
@@ -194,22 +195,18 @@
         loadMessages();
     }
 
-    /* РАБОЧИЙ КРУЖОЧЕК */
+    /* КРУЖОЧЕК */
     async function startCircle() {
         const overlay = document.getElementById('circle-rec-overlay');
         const preview = document.getElementById('rec-preview');
         const stopBtn = document.getElementById('stop-btn-action');
-        
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             preview.srcObject = stream;
             overlay.style.display = 'flex';
-            
             mediaRecorder = new MediaRecorder(stream);
             chunks = [];
-
             mediaRecorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
-            
             mediaRecorder.onstop = () => {
                 const blob = new Blob(chunks, { type: 'video/webm' });
                 const reader = new FileReader();
@@ -220,19 +217,46 @@
                         time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
                     });
                 };
-                // Выключаем камеру
                 stream.getTracks().forEach(track => track.stop());
                 overlay.style.display = 'none';
             };
-
             mediaRecorder.start();
-            
-            stopBtn.onclick = () => {
-                mediaRecorder.stop();
-            };
+            stopBtn.onclick = () => mediaRecorder.stop();
+        } catch (err) { alert("Нужен доступ к камере!"); }
+    }
 
-        } catch (err) {
-            alert("Нужен доступ к камере и микрофону!");
+    /* ГОЛОСОВЫЕ СООБЩЕНИЯ */
+    async function toggleVoice() {
+        const btn = document.getElementById('voice-btn');
+        if (!isRecordingVoice) {
+            try {
+                const vStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                voiceRecorder = new MediaRecorder(vStream);
+                voiceChunks = [];
+                voiceRecorder.ondataavailable = e => voiceChunks.push(e.data);
+                voiceRecorder.onstop = () => {
+                    const blob = new Blob(voiceChunks, { type: 'audio/ogg; codecs=opus' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = () => {
+                        db.ref('privates/' + chatID).push({
+                            s: myName, type: 'voice', v: reader.result,
+                            time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                        });
+                    };
+                    vStream.getTracks().forEach(t => t.stop());
+                };
+                voiceRecorder.start();
+                isRecordingVoice = true;
+                btn.style.color = 'var(--red)';
+                btn.classList.add('fa-stop');
+            } catch (e) { alert("Нет доступа к микрофону"); }
+        } else {
+            voiceRecorder.stop();
+            isRecordingVoice = false;
+            btn.style.color = 'var(--gray)';
+            btn.classList.remove('fa-stop');
+            btn.classList.add('fa-microphone');
         }
     }
 
@@ -250,16 +274,19 @@
         db.ref('privates/' + chatID).on('value', snap => {
             const area = document.getElementById('messages');
             area.innerHTML = '';
-            if(snap.val()) {
-                Object.values(snap.val()).forEach(m => {
+            const data = snap.val();
+            if(data) {
+                Object.values(data).forEach(m => {
                     const div = document.createElement('div');
                     div.className = `msg ${m.s === myName ? 'sent' : 'received'}`;
                     if(m.type === 'circle') {
-                        div.innerHTML = `<video class="circle-v" src="${m.v}" autoplay loop muted playsinline></video>
-                                         <div style="font-size:10px; opacity:0.4; text-align:right;">${m.time}</div>`;
+                        div.innerHTML = `<video class="circle-v" src="${m.v}" autoplay loop muted playsinline></video>`;
+                    } else if(m.type === 'voice') {
+                        div.innerHTML = `<i class="fa-solid fa-microphone" style="color:var(--tg-blue)"></i> <audio controls src="${m.v}"></audio>`;
                     } else {
-                        div.innerHTML = `${m.t} <div style="font-size:10px; opacity:0.4; text-align:right;">${m.time}</div>`;
+                        div.innerHTML = `${m.t}`;
                     }
+                    div.innerHTML += `<div style="font-size:10px; opacity:0.4; text-align:right;">${m.time}</div>`;
                     area.appendChild(div);
                 });
                 area.scrollTop = area.scrollHeight;
